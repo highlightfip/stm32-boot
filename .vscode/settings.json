@@ -1,0 +1,13 @@
+{
+    "files.associations": {
+        "stm32f10x_rcc.h": "c",
+        "gpio.h": "c",
+        "stm32f10x_gpio.h": "c",
+        "stm32f10x.h": "c",
+        "led.h": "c",
+        "limits": "c",
+        "memory": "c"
+    },
+    "C_Cpp.errorSquiggles": "Disabled",
+    "C_Cpp.default.compilerPath": ""
+}
