@@ -1,8 +1,8 @@
 /*
  * @Author: highlightfip
  * @Date: 2023-08-18 09:19:06
- * @LastEditTime: 2023-09-04 23:05:40
- * @LastEditors: highlightfip 2793393724@qq.com
+ * @LastEditTime: 2023-09-11 23:23:44
+ * @LastEditors: 2793393724@qq.com 2793393724@qq.com
  * @Description: control S2 & 4X4keyboard
  * @FilePath: \stm32-boot\periph\snap.c
  */
@@ -43,8 +43,18 @@ static BSP_INFO_T VCC_44KB[4] =
     }
 };
 
+static SNAPKB_FEEDBACK_T NULL_SNAPKB = 
+{
+    0,
+    {
+        0,0,0,0,0,0,0,0,
+        0,0,0,0,0,0,0,0
+    }
+};
+
 static void open(void *handle, void *dev_obj);
-static void close(void);
+static int8_t read(void *handle, void *data);
+static void close(void *handle);
 
 /**
  * @brief: int the operator
@@ -54,12 +64,13 @@ static void close(void);
 extern void  snap_opr_init(void *dev_obj_opr)
 {
     ((SNAP_OPR_T *)dev_obj_opr)->open = open;
+    ((SNAP_OPR_T *)dev_obj_opr)->read = read;
     ((SNAP_OPR_T *)dev_obj_opr)->close = close;
 }
 
 /**
  * @brief: open the device
- * @param {SNAP_HANDLE_T} *handle
+ * @param {SNAPKB_HANDLE_T} *handle
  * @param {void} *dev_obj select the exti device
  * @retval: None
  */
@@ -83,13 +94,34 @@ static void open(void *handle, void *dev_obj)
 }
 
 /**
+ * @brief: 
+ * @param {SNAPKB_HANDLE_T} *handle
+ * @param {SNAPKB_FEEDBACK_T} *data 
+ * @retval: 
+ */
+static SNAPKB_FEEDBACK_T exti_receiver;
+static int8_t read(void *handle, void *data)
+{
+    int8_t result_state = 0;
+    SNAPKB_HANDLE_T *sh = (SNAPKB_HANDLE_T *)handle;
+    SNAPKB_FEEDBACK_T *receive_data = (SNAPKB_FEEDBACK_T *)data;
+
+    //copy the receive data
+    *receive_data = exti_receiver;
+
+    //reset receiver
+    exti_receiver = NULL_SNAPKB;
+
+    return result_state;
+}
+
+/**
  * @brief: close the device
  */
-static void close(void)
+static void close(void *handle)
 {
-    EXTI_OPR_T exti_opr;
-    exti_opr_init(&exti_opr);
-    exti_opr.close();
+    SNAPKB_HANDLE_T *sh = (SNAPKB_HANDLE_T *)handle;
+    sh->exti_handle[0].exti_opr.close();
 }
 
 static uint8_t detect_snapKB(EXTI_NAME_T extix)
@@ -133,10 +165,12 @@ bug_check_num(m+1,dat);
             check_ptr++;
         }
         DelayMs(21);
-        return check_ptr-1;// +(((uint8_t)extix-1)<<2)
 #if PORT_OUTPUT_EXTI
-bug_check_num((uint16_t)extix, check_ptr);
+        bug_check_num((uint16_t)extix, check_ptr);
 #endif
+        exti_receiver.act_record[(((uint8_t)extix-1)<<2)] += 1;
+        exti_receiver.snapkb_state = ENABLE;
+        return check_ptr-1;// +(((uint8_t)extix-1)<<2)
     }
 #if PORT_OUTPUT_EXTI
     else 

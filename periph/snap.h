@@ -1,8 +1,8 @@
 /*
  * @Author: highlightfip
  * @Date: 2023-08-18 09:18:57
- * @LastEditTime: 2023-08-30 17:12:19
- * @LastEditors: highlightfip 2793393724@qq.com
+ * @LastEditTime: 2023-09-11 16:17:33
+ * @LastEditors: 2793393724@qq.com 2793393724@qq.com
  * @Description: control S2 & 4X4keyboard
  * @FilePath: \stm32-boot\periph\snap.h
  */
@@ -34,7 +34,8 @@ typedef struct
 typedef struct
 {
     void (*open)(void *handle, void *dev_obj);
-    void (*close)(void);
+    void (*read)(void *handle);
+    void (*close)(void *handle);
 } SNAP_OPR_T;
 
 #define SNAP_NAME_T uint16_t *
@@ -51,6 +52,15 @@ typedef struct
     EXTI_HANDLE_T exti_handle[4];
     GPIO_HANDLE_T vcc_gh[4];
 } SNAPKB_HANDLE_T;
+
+/**
+ * @brief: record the snap keyboard touch feedback
+ */
+typedef struct
+{
+    uint8_t snapkb_state;
+    uint8_t act_record[16];
+} SNAPKB_FEEDBACK_T;
 
 #define SNAPKB_GROUP_NUM (uint16_t)1
 
