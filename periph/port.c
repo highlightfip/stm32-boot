@@ -63,6 +63,12 @@ static int32_t stm32_print(void *handle, const char *frm , ...)
                     case 'd': /*max = 2,147,483,648*/
 					{
                         int digit = va_arg(arg, int32_t);
+                        if (!digit) 
+                        {
+                            PUTC('0');
+                            cnt_num++;
+                            break;
+                        }
                         if (digit < 0)
                         {
                             PUTC('-');

@@ -1,7 +1,7 @@
 /*
  * @Author: highlightfip
  * @Date: 2023-08-18 09:19:06
- * @LastEditTime: 2023-09-11 23:23:44
+ * @LastEditTime: 2023-09-13 22:52:39
  * @LastEditors: 2793393724@qq.com 2793393724@qq.com
  * @Description: control S2 & 4X4keyboard
  * @FilePath: \stm32-boot\periph\snap.c
@@ -13,7 +13,7 @@
 static SNAP_INFO_T SNAP_INFO_GROUP[SNAPKB_GROUP_NUM] =
 {
     {
-        snap0,
+        snapKB,
         {
             exti1,
             exti2,
@@ -132,7 +132,7 @@ static uint8_t detect_snapKB(EXTI_NAME_T extix)
     uint8_t result_state = 0;   //if C1_4 == 0 after one loop<w>, return 1 while means detected false
     DelayUs(200);
     
-    for(m = 0; m < 2; m++)
+    for(m = 0; m < 1; m++)
     {
         for (w = 0; w < 4 && !(C1_4 & (1<<w)); w++)
         {
@@ -148,7 +148,7 @@ static uint8_t detect_snapKB(EXTI_NAME_T extix)
             if (!(check_ptr-1)) break;
             DelayUs(70);
 #if PORT_OUTPUT_EXTI
-bug_check_num(m+1,dat);
+            bug_check_num(m+1,dat);
 #endif
         }
         result_state = !(C1_4);
@@ -164,21 +164,22 @@ bug_check_num(m+1,dat);
             m >>= 1;
             check_ptr++;
         }
-        DelayMs(21);
+        DelayMs(14);
+        exti_receiver.act_record[(((uint8_t)extix)<<2)+check_ptr-5] += 1;
+        exti_receiver.snapkb_state |= 1;
 #if PORT_OUTPUT_EXTI
         bug_check_num((uint16_t)extix, check_ptr);
+        bug_check_num((((uint8_t)extix)<<2)+check_ptr-5, 0xf);
+        bug_check_num(exti_receiver.act_record[9], exti_receiver.act_record[8]);
+        bug_check_loc("-----------------------");
 #endif
-        exti_receiver.act_record[(((uint8_t)extix-1)<<2)] += 1;
-        exti_receiver.snapkb_state = ENABLE;
         return check_ptr-1;// +(((uint8_t)extix-1)<<2)
     }
 #if PORT_OUTPUT_EXTI
     else 
     {
-bug_check_loc("detect snap FALSE!!");
+        bug_check_loc("----detect snap FALSE!!----");
     }
-// bug_check_num((uint16_t)extix-1, check_ptr-1+(((uint16_t)extix-1)<<2));
-bug_check_loc("-----------------------");
 #endif
 }
 
@@ -186,7 +187,7 @@ void EXTI1_IRQHandler(void)
 {
 	if(SET == EXTI_GetITStatus(EXTI_Line1))
 	{
-        SNAP1_IRQ(detect_snapKB(exti1));
+        detect_snapKB(exti1);
     }
 	EXTI_ClearITPendingBit(EXTI_Line1);
 }
@@ -195,7 +196,7 @@ void EXTI2_IRQHandler(void)
 {
     if(SET == EXTI_GetITStatus(EXTI_Line2))
     {
-        SNAP2_IRQ(detect_snapKB(exti2));
+        detect_snapKB(exti2);
     }
     EXTI_ClearITPendingBit(EXTI_Line2);
 }
@@ -204,7 +205,7 @@ void EXTI3_IRQHandler(void)
 {
     if(SET == EXTI_GetITStatus(EXTI_Line3))
     {
-        SNAP3_IRQ(detect_snapKB(exti3));
+        detect_snapKB(exti3);
     }
     EXTI_ClearITPendingBit(EXTI_Line3);
 }
@@ -213,7 +214,7 @@ void EXTI4_IRQHandler(void)
 {
     if(SET == EXTI_GetITStatus(EXTI_Line4))
     {
-        SNAP4_IRQ(detect_snapKB(exti4));
+        detect_snapKB(exti4);
     }
     EXTI_ClearITPendingBit(EXTI_Line4);
 }

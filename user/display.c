@@ -1,8 +1,8 @@
 /*
  * @Author: highlightfip
  * @Date: 2023-08-21 17:40:13
- * @LastEditTime: 2023-09-05 21:04:17
- * @LastEditors: highlightfip 2793393724@qq.com
+ * @LastEditTime: 2023-09-13 22:58:13
+ * @LastEditors: 2793393724@qq.com 2793393724@qq.com
  * @Description: display operation interface
  * @FilePath: \stm32-boot\user\display.c
  */
@@ -108,18 +108,21 @@ static OPRINF_HANDLE_T interface_GROUP[INF_GROUP_NUM] =
                 OLED_PRINT_BMP,
                 {
                     "4",NULL,//spaceship
-                    0,57,12,64
+                    // 0,30,12,37
                 }
             }
         },
-        ((0x2+(0x2<<2)+(0x00<<4)+(0x02<<6))<<4)+0x2,
+        ((0x2+(0x2<<2)+(0x00<<4)+(0x03<<6))<<4)+0x2,
         NULL
     }
 };
 
 static OPERATE_INFO_Timer Oprate_Info_Timer =
 {
-    0,0,0
+    {
+        0,0,0
+    },
+    0,
 };
 
 static OPERATE_INFO_SpaceImpact Oprate_Info_Space =
@@ -159,7 +162,7 @@ static void Display_Init(void *handle)
     disp_handle->interface_index = &disp_handle->interface[INF_FIRST_INDEX];
     //snap keyboard init
     snap_opr_init(&disp_handle->snapkb_handle.snap_opr);
-    disp_handle->snapkb_handle.snap_opr.open(&disp_handle->snapkb_handle, snap0);
+    disp_handle->snapkb_handle.snap_opr.open(&disp_handle->snapkb_handle, snapKB);
 
     //oled init
     oled_opr_init(&disp_handle->oled_handle.oled_opr);
@@ -183,7 +186,6 @@ static void Display_Init(void *handle)
     //operate info load
     disp_handle->interface[0].opr_info = &(disp_handle->display_info.timer);
     disp_handle->interface[2].opr_info = &(disp_handle->display_info.space_impact);
-bug_check_num(disp_handle->display_info.space_impact.health, 1);
 }
 
 static void delay(void)
@@ -209,11 +211,10 @@ static void Display_Start(void *handle)
             if(!IS_OPRINF_CHANGE_NOW(disp_handle->interface_index->oprinf_id, temp)) continue;
             disp_handle->oled_handle.oled_opr.print(&disp_handle->oled_handle, &disp_handle->interface_index->display_info[temp]);
             ID_FLAT_CLEAR(disp_handle->interface_index->oprinf_id, temp);
-            bug_check_loc("DISPLAY REFRESH");
+            // bug_check_loc("DISPLAY REFRESH");
         }
-        //disp_handle->opr_MainFunc(disp_handle);
+        disp_handle->opr_MainFunc(disp_handle);
         disp_handle->interface_index->opr_SubFunc(disp_handle->interface_index);
-
     }
 }
 
@@ -222,11 +223,49 @@ static void Display_End(void *handle)
     
 }
 
+/**
+ * @brief: deal with snapkb feedback info & other important
+ * @param {void} *handle
+ * @retval: 
+ */
 static void opr_MainFunc(void *handle)
 {
+    int i;
     DISPLAY_HANDLE_T *disp_handle = (DISPLAY_HANDLE_T *)handle;
+    SNAPKB_FEEDBACK_T Snapkb_FB;
+    disp_handle->snapkb_handle.snap_opr.read(&disp_handle->snapkb_handle, &Snapkb_FB);
 
+    if(DISABLE == Snapkb_FB.snapkb_state)
+    {
+        return ;
+    }
 
+    switch(disp_handle->interface_index->oprinf_id&0xf)
+    {
+#define SNAP_FIND()
+
+        case 0/*Timer*/:
+        {
+            disp_handle->display_info.timer.Is_Timerpause = Snapkb_FB.act_record[S12] & 1;
+            break;
+        }
+        case 1/*BS8bit*/:
+        {
+            break;
+        }
+        case 2/*SpaceImpact*/:
+        {
+            disp_handle->display_info.space_impact.spaceship.position_x += Snapkb_FB.act_record[S12] * 2;
+            disp_handle->display_info.space_impact.spaceship.position_x -= Snapkb_FB.act_record[S32] * 2;
+            disp_handle->display_info.space_impact.spaceship.position_y -= Snapkb_FB.act_record[S21] * 2;
+            disp_handle->display_info.space_impact.spaceship.position_y += Snapkb_FB.act_record[S23] * 2;
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
 }
 
 static void opr_SubFunc_timer(void *handle)
@@ -238,27 +277,32 @@ static void opr_SubFunc_timer(void *handle)
     delay();
 
     //refresh data
+    if(dev_obj->Is_Timerpause) 
+    {
+        return ;
+    }
+
 #define TIME_PER_T 60
-    dev_obj->Time_Second++;
-    dev_obj->Time_Minute += dev_obj->Time_Second/TIME_PER_T;
-    dev_obj->Time_Second %= TIME_PER_T;
-    dev_obj->Time_Hour   += dev_obj->Time_Minute/TIME_PER_T;
-    dev_obj->Time_Minute %= TIME_PER_T;
+    dev_obj->cur_time.Time_Second++;
+    dev_obj->cur_time.Time_Minute += dev_obj->cur_time.Time_Second/TIME_PER_T;
+    dev_obj->cur_time.Time_Second %= TIME_PER_T;
+    dev_obj->cur_time.Time_Hour   += dev_obj->cur_time.Time_Minute/TIME_PER_T;
+    dev_obj->cur_time.Time_Minute %= TIME_PER_T;
 #undef TIME_PER_T
 
     //display info update
-    oh->display_info[0].data.data_ptr[0] = dev_obj->Time_Hour/10 + '0';
-    oh->display_info[0].data.data_ptr[1] = dev_obj->Time_Hour%10 + '0';
+    oh->display_info[0].data.data_ptr[0] = dev_obj->cur_time.Time_Hour/10 + '0';
+    oh->display_info[0].data.data_ptr[1] = dev_obj->cur_time.Time_Hour%10 + '0';
 
-    oh->display_info[2].data.data_ptr[0] = dev_obj->Time_Minute/10 + '0';
-    oh->display_info[2].data.data_ptr[1] = dev_obj->Time_Minute%10 + '0';
+    oh->display_info[2].data.data_ptr[0] = dev_obj->cur_time.Time_Minute/10 + '0';
+    oh->display_info[2].data.data_ptr[1] = dev_obj->cur_time.Time_Minute%10 + '0';
 
-    oh->display_info[4].data.data_ptr[0] = dev_obj->Time_Second/10 + '0';
-    oh->display_info[4].data.data_ptr[1] = dev_obj->Time_Second%10 + '0';
+    oh->display_info[4].data.data_ptr[0] = dev_obj->cur_time.Time_Second/10 + '0';
+    oh->display_info[4].data.data_ptr[1] = dev_obj->cur_time.Time_Second%10 + '0';
     
     //oprinf_id update
-    ID_FLAT_UPDATE(oh->oprinf_id, 0, (!(dev_obj->Time_Second))&&(!(dev_obj->Time_Minute)))
-    ID_FLAT_UPDATE(oh->oprinf_id, 2,  !(dev_obj->Time_Second))
+    ID_FLAT_UPDATE(oh->oprinf_id, 0, (!(dev_obj->cur_time.Time_Second))&&(!(dev_obj->cur_time.Time_Minute)))
+    ID_FLAT_UPDATE(oh->oprinf_id, 2,  !(dev_obj->cur_time.Time_Second))
 }
 
 static void opr_SubFunc_BS8bit(void *handle)
@@ -273,61 +317,13 @@ static void opr_SubFunc_SpaceImpact(void *handle)
     OPERATE_INFO_SpaceImpact *dev_obj = (OPERATE_INFO_SpaceImpact *)(oh->opr_info);
 
     //oprinf_id update
-    ID_FLAT_UPDATE(oh->oprinf_id, 3, !(oh->display_info[2].data.x==dev_obj->spaceship.position_x))
-    ID_FLAT_UPDATE(oh->oprinf_id, 2, (IS_OPRINF_CHANGE_NOW(oh->oprinf_id, 3)));
+    // ID_FLAT_UPDATE(oh->oprinf_id, 3, !(oh->display_info[2].data.x==dev_obj->spaceship.position_x))
+    // ID_FLAT_UPDATE(oh->oprinf_id, 2, (IS_OPRINF_CHANGE_NOW(oh->oprinf_id, 3)));
 
     //display info update
-    oh->display_info[2].data.x = dev_obj->spaceship.position_x;
-    oh->display_info[2].data.x1 = dev_obj->spaceship.position_x + 12;
-    oh->display_info[2].data.y = dev_obj->spaceship.position_y;
-    SI_info = dev_obj;
+    oh->display_info[3].data.x = dev_obj->spaceship.position_x;
+    oh->display_info[3].data.x1 = dev_obj->spaceship.position_x + 12;
+    oh->display_info[3].data.y = dev_obj->spaceship.position_y;
+    oh->display_info[3].data.y1 = dev_obj->spaceship.position_y + 7;
 }
 
-
-void SNAP1_IRQ(uint8_t index)
-{
-    switch(index)
-    {
-        case 1 : SI_info->spaceship.position_x += 3; break;
-        case 2 : break;
-        case 3 : break;
-        case 4 : break;
-        default: break;
-    }
-}
-
-void SNAP2_IRQ(uint8_t index)
-{
-    switch(index)
-    {
-        case 1 : SI_info->spaceship.position_x -= 3; break;
-        case 2 : break;
-        case 3 : break;
-        case 4 : break;
-        default: break;
-    }
-}
-
-void SNAP3_IRQ(uint8_t index)
-{
-    switch(index)
-    {
-        case 1 : SI_info->spaceship.position_x -= 3; break;
-        case 2 : break;
-        case 3 : break;
-        case 4 : break;
-        default: break;
-    }
-}
-
-void SNAP4_IRQ(uint8_t index)
-{
-    switch(index)
-    {
-        case 1 : SI_info->spaceship.position_x -= 3; break;
-        case 2 : break;
-        case 3 : break;
-        case 4 : break;
-        default: break;
-    }
-}

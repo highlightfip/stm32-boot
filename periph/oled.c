@@ -277,11 +277,11 @@ static uint8_t *LocateDateptr1(uint8_t *data)
 {
     switch(data[0])
     {
-        case '0': bug_check_loc("BMP example load success");return BMP_EX;
-        case '1': bug_check_loc("BS8bit left load success"); return BS_8bit_left;
-        case '2': bug_check_loc("BS8bit right load success");return BS_8bit_right;
-        case '3': bug_check_loc("health load success");return health;
-        case '4': bug_check_loc("spaceship load success");return spaceship;
+        case '0': return BMP_EX;
+        case '1': return BS_8bit_left;
+        case '2': return BS_8bit_right;
+        case '3': return health;
+        case '4': return spaceship;
         default: bug_check_loc("loading false"); return NULL;
     }
 }

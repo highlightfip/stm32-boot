@@ -44,7 +44,7 @@ int main()
 	oh.oled_opr.open(&oh, oled1);
 
 	snap_opr_init(&(sh.snap_opr));
-	sh.snap_opr.open(&sh, snap0);
+	sh.snap_opr.open(&sh, snapKB);
 
 	
 	// ph1.port_opr.print(&ph1, "hello world!\r\n");
