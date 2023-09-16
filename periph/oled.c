@@ -43,7 +43,7 @@ extern OLED_PRINT_T OLED_PRINT_GROUP[4] =
     {
         OLED_PRINT_FILL,
         {
-            "0",NULL,
+            NULL,NULL,
             0,0,128,64
         }
     }

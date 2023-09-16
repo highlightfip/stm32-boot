@@ -26,7 +26,7 @@ typedef struct
 #define OPERATE_NEXT_T  void *          //point to the next interface
 #define OPERATE_INFO_T  void *          //point to info memory section
 #define OPERATE_FUNC_T  void 
-#define MAX_ELEMENT_NUM 6
+#define MAX_ELEMENT_NUM 16
 
 /**
  * @brief: use oprinf_id as index, only refresh oled when it need to

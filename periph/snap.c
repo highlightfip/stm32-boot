@@ -1,7 +1,7 @@
 /*
  * @Author: highlightfip
  * @Date: 2023-08-18 09:19:06
- * @LastEditTime: 2023-09-13 22:52:39
+ * @LastEditTime: 2023-09-15 12:52:04
  * @LastEditors: 2793393724@qq.com 2793393724@qq.com
  * @Description: control S2 & 4X4keyboard
  * @FilePath: \stm32-boot\periph\snap.c
@@ -126,6 +126,7 @@ static void close(void *handle)
 
 static uint8_t detect_snapKB(EXTI_NAME_T extix)
 {
+    int i;
     int8_t dat = 0xffff;
     uint8_t check_ptr = 4;      //species one of the snap<0-3> which then wound be the most possible one
     uint8_t C1_4 = 0;           //species the impossible snap<1>
@@ -167,10 +168,17 @@ static uint8_t detect_snapKB(EXTI_NAME_T extix)
         DelayMs(14);
         exti_receiver.act_record[(((uint8_t)extix)<<2)+check_ptr-5] += 1;
         exti_receiver.snapkb_state |= 1;
+        for(i = 0; i < 17; i++) {
+            if(i==16) bug_check_loc("add false");
+            else if(exti_receiver.act_record[i]) 
+            {
+                bug_check_num(i,i);
+                break;
+            }
+        }
 #if PORT_OUTPUT_EXTI
-        bug_check_num((uint16_t)extix, check_ptr);
-        bug_check_num((((uint8_t)extix)<<2)+check_ptr-5, 0xf);
-        bug_check_num(exti_receiver.act_record[9], exti_receiver.act_record[8]);
+        // bug_check_num((uint16_t)extix, check_ptr);
+        // bug_check_num((((uint8_t)extix)<<2)+check_ptr-5, 0xf);
         bug_check_loc("-----------------------");
 #endif
         return check_ptr-1;// +(((uint8_t)extix-1)<<2)
