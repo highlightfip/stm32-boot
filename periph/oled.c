@@ -69,15 +69,15 @@ void oled_opr_init(void *dev_obj_opr)
 
 void open(void *handle, void *dev_obj)
 {
-    int16_t i = 28;
+    int16_t i;
     OLED_HANDLE_T *oh = (OLED_HANDLE_T *)handle;
 
     i2c_opr_init(&oh->i2c_handle.i2c_opr);
     oh->i2c_handle.i2c_opr.open(&oh->i2c_handle, dev_obj);
     
-    for(i = 0; i < 28; i++)
+    for(i = 0; i < OLED_INITCMD_LEN; i++)
     {
-        oh->i2c_handle.i2c_opr.write(&(oh->i2c_handle), I2C_ADDR_CMD, Oled_InitStr[i]);
+        oh->i2c_handle.i2c_opr.write(&(oh->i2c_handle), I2C_ADDR_CMD, Oled_InitCmd[i]);
     }
 }
 

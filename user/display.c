@@ -1,7 +1,7 @@
 /*
  * @Author: highlightfip
  * @Date: 2023-08-21 17:40:13
- * @LastEditTime: 2023-09-16 22:01:27
+ * @LastEditTime: 2023-09-20 16:35:35
  * @LastEditors: 2793393724@qq.com 2793393724@qq.com
  * @Description: display operation interface
  * @FilePath: \stm32-boot\user\display.c
@@ -349,9 +349,10 @@ static void opr_SubFunc_SpaceImpact(void *handle)
     // ID_FLAT_UPDATE(oh->oprinf_id, 2, (IS_OPRINF_CHANGE_NOW(oh->oprinf_id, 3)));
 
     //oprinf_id update
-    ID_FLAT_UPDATE(oh->oprinf_id, 2, (oh->display_info[3].data.x!=dev_obj->spaceship.position_x)\
-                                   ||(oh->display_info[3].data.y!=dev_obj->spaceship.position_y));
-
+    ID_FLAT_UPDATE(oh->oprinf_id, SI_CLEAR_ID, (oh->display_info[SI_SPACESHIP_ID].data.x!=dev_obj->spaceship.position_x)\
+                                             ||(oh->display_info[SI_SPACESHIP_ID].data.y!=dev_obj->spaceship.position_y));
+    ID_FLAT_UPDATE(oh->oprinf_id, SI_SCORE_ID, ((oh->display_info[SI_SCORE_ID].data.data_ptr[2]-'0')!=dev_obj->score));
+    
     //display info update
     oh->display_info[3].data.x = dev_obj->spaceship.position_x;
     oh->display_info[3].data.x1 = dev_obj->spaceship.position_x + 12;

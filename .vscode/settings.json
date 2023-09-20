@@ -6,7 +6,8 @@
         "stm32f10x.h": "c",
         "led.h": "c",
         "limits": "c",
-        "memory": "c"
+        "memory": "c",
+        "stm32f10x_tim.h": "c"
     },
     "C_Cpp.errorSquiggles": "Disabled",
     "C_Cpp.default.compilerPath": ""

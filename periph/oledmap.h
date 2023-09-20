@@ -1,7 +1,7 @@
 /*
  * @Author: highlightfip
  * @Date: 2023-08-19 11:48:26
- * @LastEditTime: 2023-09-16 22:26:35
+ * @LastEditTime: 2023-09-17 10:34:26
  * @LastEditors: 2793393724@qq.com 2793393724@qq.com
  * @Description: 
  * @FilePath: \stm32-boot\periph\oledmap.h
@@ -10,7 +10,8 @@
 #ifndef _OLEDMAP_H
 #define _OLEDMAP_H
 
-const unsigned char Oled_InitStr[] =
+#define OLED_INITCMD_LEN 28
+const unsigned char Oled_InitCmd[] =
 {
 	0xAE,0x20,0x10,0xb0,0xc8,0x00,0x10,0x40,0x81,0xff,
 	0xa1,0xa6,0xa8,0x3F,0xa4,0xd3,0x00,0xd5,0xf0,0xd9,

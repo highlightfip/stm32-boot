@@ -97,6 +97,11 @@ typedef struct
     //uint16_t             bullet_num;
 } OPERATE_INFO_SpaceImpact;
 
+#define SI_HEALTH_ID     0
+#define SI_SCORE_ID      1
+#define SI_CLEAR_ID      2
+#define SI_SPACESHIP_ID  3
+
 /**
  * @brief: value need to keep oprinf run in order
  */
