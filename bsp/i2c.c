@@ -1,7 +1,7 @@
 /*
  * @Author       : highlight
  * @Date         : 2023-08-08 19:47:28
- * @LastEditTime: 2023-09-05 21:12:30
+ * @LastEditTime: 2023-09-24 21:45:10
  * @LastEditors: highlightfip 2793393724@qq.com
  * @Description  : i2c opr
  * @FilePath: \stm32-boot\bsp\i2c.c
@@ -38,7 +38,6 @@ static I2C_INFO_T I2C_INFO_GROUP[1] =
 
 static void open(void *handle, void *dev_obj);
 static void write(void *handle, uint8_t addr, uint8_t data);
-static void close(void *handle);
 
 /**
  * @brief: int the operator
@@ -49,7 +48,6 @@ extern void i2c_opr_init(void *dev_obj_opr)
 {
     ((I2C_OPR_T *)dev_obj_opr)->open = open;
     ((I2C_OPR_T *)dev_obj_opr)->write = write;
-    ((I2C_OPR_T *)dev_obj_opr)->close = close;
 }
 
 static void open(void *handle, void *dev_obj)
@@ -88,10 +86,4 @@ static void write(void *handle, uint8_t addr, uint8_t data)
 	
 	I2C_GenerateSTOP(ih->i2c_info.i2cx, ENABLE);//关闭I2C1总线
 
-}
-
-static void close(void *handle)
-{
-	I2C_HANDLE_T *ih = (I2C_HANDLE_T *)handle;
-	bug_check();
 }

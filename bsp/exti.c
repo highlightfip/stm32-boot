@@ -1,7 +1,7 @@
 /*
  * @Author       : highlight
  * @Date         : 2023-08-09 22:37:46
- * @LastEditTime: 2023-08-27 16:49:58
+ * @LastEditTime: 2023-09-24 15:32:07
  * @LastEditors: highlightfip 2793393724@qq.com
  * @Description  : exti
  * @FilePath: \stm32-boot\bsp\exti.c
@@ -54,17 +54,17 @@ static EXTI_INFO_T EXTI_INFO_GROUP[EXTI_GROUP_NUM] =
     {
         exti2,
         {
-            PC14,
+            PA0,
             GPIO_Mode_IPU
         },
         {
-            EXTI_Line14,
+            EXTI_Line0,
             EXTI_Mode_Interrupt,
             EXTI_Trigger_Falling,
             ENABLE
         },
         {
-            EXTI15_10_IRQn,
+            EXTI0_IRQn,
             1,
             0,
             ENABLE

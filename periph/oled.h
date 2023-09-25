@@ -1,8 +1,8 @@
 /*
  * @Author: highlightfip
  * @Date: 2023-08-19 11:13:33
- * @LastEditTime: 2023-09-16 21:44:27
- * @LastEditors: 2793393724@qq.com 2793393724@qq.com
+ * @LastEditTime: 2023-09-25 18:10:42
+ * @LastEditors: highlightfip 2793393724@qq.com
  * @Description: oled opr
  * @FilePath: \stm32-boot\periph\oled.h
  */
@@ -34,7 +34,7 @@
 typedef struct
 {
     uint8_t data_ptr[DATA_MAX_LEN];
-    uint8_t *data_ptr1;
+    const uint8_t *data_ptr1;
     uint8_t x;
     uint8_t y;
     uint8_t x1;
@@ -63,7 +63,6 @@ typedef struct
 {
     void (*open)(void *handle, void *dev_obj);
     int8_t (*print)(void *handle, void *data);
-    void (*close)(void *handle);
 } OLED_OPR_T;
 
 typedef struct

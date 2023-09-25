@@ -1,8 +1,8 @@
 /*
  * @Author: highlightfip
  * @Date: 2023-08-18 09:19:06
- * @LastEditTime: 2023-09-15 12:52:04
- * @LastEditors: 2793393724@qq.com 2793393724@qq.com
+ * @LastEditTime: 2023-09-25 07:59:03
+ * @LastEditors: highlightfip 2793393724@qq.com
  * @Description: control S2 & 4X4keyboard
  * @FilePath: \stm32-boot\periph\snap.c
  */
@@ -10,7 +10,7 @@
 #include "snap.h"
 #include "delay.h"
 
-static SNAP_INFO_T SNAP_INFO_GROUP[SNAPKB_GROUP_NUM] =
+const static SNAP_INFO_T SNAP_INFO_GROUP[SNAPKB_GROUP_NUM] =
 {
     {
         snapKB,
@@ -43,14 +43,8 @@ static BSP_INFO_T VCC_44KB[4] =
     }
 };
 
-static SNAPKB_FEEDBACK_T NULL_SNAPKB = 
-{
-    0,
-    {
-        0,0,0,0,0,0,0,0,
-        0,0,0,0,0,0,0,0
-    }
-};
+SNAPKB_HANDLE_T *Snap_IPQ_Handle;
+static SNAPKB_FEEDBACK_T exti_receiver;
 
 static void open(void *handle, void *dev_obj);
 static int8_t read(void *handle, void *data);
@@ -74,12 +68,11 @@ extern void  snap_opr_init(void *dev_obj_opr)
  * @param {void} *dev_obj select the exti device
  * @retval: None
  */
-static uint8_t w, m;
-SNAPKB_HANDLE_T *Snap_IPQ_Handle;
 static void open(void *handle, void *dev_obj)
 {
+    uint8_t w;
     SNAPKB_HANDLE_T *sh = (SNAPKB_HANDLE_T *)handle;
-
+bug_check_loc("snap.open");
     exti_opr_init(&(sh->exti_handle[0].exti_opr));
     gpio_opr_init(&(sh->vcc_gh[0].gpio_opr));
     memcpy(&sh->snap_info, &SNAP_INFO_GROUP[(uint8_t)dev_obj], sizeof(SNAP_INFO_T));
@@ -91,6 +84,9 @@ static void open(void *handle, void *dev_obj)
         sh->vcc_gh[0].gpio_opr.write(&sh->vcc_gh[w], (void *)0);
     }
     Snap_IPQ_Handle = sh;
+
+    memset(&exti_receiver, 0, sizeof(SNAPKB_FEEDBACK_T));
+
 }
 
 /**
@@ -99,7 +95,6 @@ static void open(void *handle, void *dev_obj)
  * @param {SNAPKB_FEEDBACK_T} *data 
  * @retval: 
  */
-static SNAPKB_FEEDBACK_T exti_receiver;
 static int8_t read(void *handle, void *data)
 {
     int8_t result_state = 0;
@@ -110,7 +105,7 @@ static int8_t read(void *handle, void *data)
     *receive_data = exti_receiver;
 
     //reset receiver
-    exti_receiver = NULL_SNAPKB;
+    memset(&exti_receiver, 0, sizeof(SNAPKB_FEEDBACK_T));
 
     return result_state;
 }
@@ -126,20 +121,20 @@ static void close(void *handle)
 
 static uint8_t detect_snapKB(EXTI_NAME_T extix)
 {
-    int i;
+    uint16_t i, w, m;
     int8_t dat = 0xffff;
     uint8_t check_ptr = 4;      //species one of the snap<0-3> which then wound be the most possible one
-    uint8_t C1_4 = 0;           //species the impossible snap<1>
-    uint8_t result_state = 0;   //if C1_4 == 0 after one loop<w>, return 1 while means detected false
+    uint8_t C1_4 = 0;           //species the impossible snap<1> which was snapped
+    uint8_t result_state = 0;   //if C1_4 == 0 after one loop<w>, return 1 which means detected false
     DelayUs(200);
     
-    for(m = 0; m < 1; m++)
+    for(m = 0; m < 2; m++)
     {
         for (w = 0; w < 4 && !(C1_4 & (1<<w)); w++)
         {
+            
             //turn on Push-Pull
-            Snap_IPQ_Handle->vcc_gh[0].gpio_opr.write(&(Snap_IPQ_Handle->vcc_gh[w]), (void *)1);    
-
+            Snap_IPQ_Handle->vcc_gh[0].gpio_opr.write(&(Snap_IPQ_Handle->vcc_gh[w]), (void *)1);
             //recording
             Snap_IPQ_Handle->exti_handle[(uint16_t)extix-1].gpio_handle.gpio_opr.read(&(Snap_IPQ_Handle->exti_handle[(uint16_t)extix-1].gpio_handle), &dat);
             C1_4 |= ((!dat)<<w);
@@ -165,7 +160,7 @@ static uint8_t detect_snapKB(EXTI_NAME_T extix)
             m >>= 1;
             check_ptr++;
         }
-        DelayMs(14);
+        // DelayMs(14);
         exti_receiver.act_record[(((uint8_t)extix)<<2)+check_ptr-5] += 1;
         exti_receiver.snapkb_state |= 1;
         for(i = 0; i < 17; i++) {
@@ -177,8 +172,8 @@ static uint8_t detect_snapKB(EXTI_NAME_T extix)
             }
         }
 #if PORT_OUTPUT_EXTI
-        // bug_check_num((uint16_t)extix, check_ptr);
-        // bug_check_num((((uint8_t)extix)<<2)+check_ptr-5, 0xf);
+        bug_check_num((uint16_t)extix, check_ptr);
+        bug_check_num((((uint8_t)extix)<<2)+check_ptr-5, 0xf);
         bug_check_loc("-----------------------");
 #endif
         return check_ptr-1;// +(((uint8_t)extix-1)<<2)
@@ -191,6 +186,16 @@ static uint8_t detect_snapKB(EXTI_NAME_T extix)
 #endif
 }
 
+void EXTI0_IRQHandler(void)
+{
+	if(SET == EXTI_GetITStatus(EXTI_Line0))
+	{
+        detect_snapKB(exti2);
+    }
+	EXTI_ClearITPendingBit(EXTI_Line0);
+    
+}
+
 void EXTI1_IRQHandler(void)
 {
 	if(SET == EXTI_GetITStatus(EXTI_Line1))
@@ -198,6 +203,7 @@ void EXTI1_IRQHandler(void)
         detect_snapKB(exti1);
     }
 	EXTI_ClearITPendingBit(EXTI_Line1);
+    
 }
 
 void EXTI2_IRQHandler(void)

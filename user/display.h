@@ -1,8 +1,8 @@
 /*
  * @Author: highlightfip
  * @Date: 2023-08-21 17:41:19
- * @LastEditTime: 2023-09-13 22:17:34
- * @LastEditors: 2793393724@qq.com 2793393724@qq.com
+ * @LastEditTime: 2023-09-25 18:07:35
+ * @LastEditors: highlightfip 2793393724@qq.com
  * @Description: display operation interface
  * @FilePath: \stm32-boot\user\display.h
  */
@@ -20,7 +20,6 @@ typedef struct
 {
     void (*init)(void *handle);
     void (*start)(void *handle);
-    void (*end)(void *handle);
 } DISPLAY_OPR_T;
 
 #define OPERATE_NEXT_T  void *          //point to the next interface
@@ -58,13 +57,13 @@ typedef struct
  *      INF_FIRST_INDEX : 0~(INF_GROUP_NUM-1)
  */
 #define INF_GROUP_NUM   3
-#define INF_FIRST_INDEX 2
+#define INF_FIRST_INDEX 0
 
 typedef struct
 {
-    uint16_t             Time_Hour;
-    uint16_t             Time_Minute;
-    uint16_t             Time_Second;
+    uint8_t             Time_Hour;
+    uint8_t             Time_Minute;
+    uint8_t             Time_Second;
 } TIME_INFO_T;
 
 /**
@@ -73,8 +72,8 @@ typedef struct
 typedef struct
 {
     TIME_INFO_T          cur_time;
-    uint16_t             Is_Timerpause;
-    TIME_INFO_T          rec_time[3];
+    uint8_t              Is_Timerpause;
+    TIME_INFO_T          rec_time;
 } OPERATE_INFO_Timer;
 
 /**

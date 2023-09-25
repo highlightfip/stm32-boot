@@ -1,22 +1,20 @@
 /*
  * @Author: highlightfip
  * @Date: 2023-08-21 17:40:13
- * @LastEditTime: 2023-09-20 16:35:35
- * @LastEditors: 2793393724@qq.com 2793393724@qq.com
+ * @LastEditTime: 2023-09-26 06:56:26
+ * @LastEditors: highlightfip 2793393724@qq.com
  * @Description: display operation interface
  * @FilePath: \stm32-boot\user\display.c
  */
 
 #include "display.h"
 
-static void *display_handleptr;
 static void opr_MainFunc(void *handle);
 static void opr_SubFunc_Timer(void *handle);
 static void opr_SubFunc_BS8bit(void *handle);
 static void opr_SubFunc_SpaceImpact(void *handle);
 static void Display_Init(void *handle);
 static void Display_Start(void *handle);
-static void Display_End(void *handle);
 
 /**
  * @brief: record the first appearance of operate interface
@@ -75,7 +73,7 @@ static OPRINF_HANDLE_T interface_GROUP[INF_GROUP_NUM] =
                 }
             }
         },
-        (((0x2)+(0x2<<2))<<4)+0x1,
+        (((0x0)+(0x0<<2))<<4)+0x1,
         NULL
     },
     {
@@ -117,7 +115,7 @@ static OPRINF_HANDLE_T interface_GROUP[INF_GROUP_NUM] =
     }
 };
 
-static OPERATE_INFO_Timer Oprate_Info_Timer =
+const static OPERATE_INFO_Timer Oprate_Info_Timer =
 {
     {
         0,0,0
@@ -125,7 +123,7 @@ static OPERATE_INFO_Timer Oprate_Info_Timer =
     0,
 };
 
-static OPERATE_INFO_SpaceImpact Oprate_Info_Space =
+const static OPERATE_INFO_SpaceImpact Oprate_Info_Space =
 {
     {
         0,57,0,0,NULL
@@ -143,7 +141,6 @@ extern void display_opr_init(void *dev_obj_opr)
 {
     ((DISPLAY_OPR_T *)dev_obj_opr)->init = Display_Init;
     ((DISPLAY_OPR_T *)dev_obj_opr)->start = Display_Start;
-    ((DISPLAY_OPR_T *)dev_obj_opr)->end = Display_End;
 }
 
 /**
@@ -159,6 +156,7 @@ static void Display_Init(void *handle)
     
     disp_handle->opr_MainFunc = opr_MainFunc;
     disp_handle->interface_index = &disp_handle->interface[INF_FIRST_INDEX];
+
     //snap keyboard init
     snap_opr_init(&disp_handle->snapkb_handle.snap_opr);
     disp_handle->snapkb_handle.snap_opr.open(&disp_handle->snapkb_handle, snapKB);
@@ -175,7 +173,6 @@ static void Display_Init(void *handle)
     //operate info load
     interface_GROUP[0].opr_info = &(disp_handle->display_info.timer);
     interface_GROUP[2].opr_info = &(disp_handle->display_info.space_impact);
-
 
     //operate interface init&define memory place
     temp = INF_GROUP_NUM;
@@ -206,24 +203,19 @@ static void Display_Start(void *handle)
     DISPLAY_HANDLE_T *disp_handle = (DISPLAY_HANDLE_T *)handle;
 
     disp_handle->oled_handle.oled_opr.print(&disp_handle->oled_handle, &OLED_PRINT_GROUP[0x2]);
-
+// bug_check();
     while(1)
     {
+        disp_handle->opr_MainFunc(disp_handle);
+        disp_handle->interface_index->opr_SubFunc(disp_handle->interface_index);
         for (temp = disp_handle->interface_index->element_startnum; temp < disp_handle->interface_index->element_endnum; temp++)
         {
             if(!IS_OPRINF_CHANGE_NOW(disp_handle->interface_index->oprinf_id, temp)) continue;
             disp_handle->oled_handle.oled_opr.print(&disp_handle->oled_handle, &disp_handle->interface_index->display_info[temp]);
             ID_FLAT_CLEAR(disp_handle->interface_index->oprinf_id, temp);
-            // bug_check_loc("DISPLAY REFRESH");
+bug_check_loc(__func__);
         }
-        disp_handle->opr_MainFunc(disp_handle);
-        disp_handle->interface_index->opr_SubFunc(disp_handle->interface_index);
     }
-}
-
-static void Display_End(void *handle)
-{
-    
 }
 
 /**
@@ -236,7 +228,6 @@ static void opr_MainFunc(void *handle)
     int i;
     DISPLAY_HANDLE_T *disp_handle = (DISPLAY_HANDLE_T *)handle;
     SNAPKB_FEEDBACK_T Snapkb_FB;
-
     disp_handle->snapkb_handle.snap_opr.read(&disp_handle->snapkb_handle, &Snapkb_FB);
     if(DISABLE == Snapkb_FB.snapkb_state)
     {
@@ -331,7 +322,6 @@ static void opr_SubFunc_Timer(void *handle)
 static void opr_SubFunc_BS8bit(void *handle)
 {
     OPRINF_HANDLE_T *oh = (OPRINF_HANDLE_T *)handle;
-
 }
 
 /**

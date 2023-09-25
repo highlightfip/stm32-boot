@@ -12,6 +12,7 @@
 #define _LED_H
 
 #include "gpio.h"
+#include "tim.h"
 
 /*** 
  * @brief: led name

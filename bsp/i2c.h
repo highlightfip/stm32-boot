@@ -1,7 +1,7 @@
 /*
  * @Author: highlightfip
  * @Date: 2023-08-19 09:42:32
- * @LastEditTime: 2023-08-19 11:43:18
+ * @LastEditTime: 2023-09-24 21:45:57
  * @LastEditors: highlightfip 2793393724@qq.com
  * @Description: 
  * @FilePath: \stm32-boot\bsp\i2c.h
@@ -37,7 +37,6 @@ typedef struct
 {
     void (*open)(void *handle, void *dev_obj);
     void (*write)(void *handle, uint8_t addr, uint8_t data);
-    void (*close)(void *handle);
 }I2C_OPR_T;
 
 /*** 

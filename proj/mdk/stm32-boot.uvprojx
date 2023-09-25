@@ -568,6 +568,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\bsp\exti.c</FilePath>
             </File>
+            <File>
+              <FileName>tim.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\bsp\tim.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
